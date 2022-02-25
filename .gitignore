@@ -1,1 +1,3 @@
-.vscode/
+.vscode/*
+tests/local_vars.yml
+.vscode/tasks.json

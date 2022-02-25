@@ -1,0 +1,57 @@
+---
+- name: Install Leaf Certificates
+  block:
+
+    - name: Make cert_management folder
+      ansible.builtin.file:
+        path: "{{ smallstep_cert_mgmt_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Get Provisioner Raw Data
+      ansible.builtin.command:
+        cmd: "step ca provisioner list"
+      environment:
+        STEPPATH: "{{ smallstep_root_directory }}"
+      register: smallstep_provisioner_results
+
+    - name: Set Provisioner JSON
+      ansible.builtin.set_fact:
+        smallstep_provisioner_raw_json: "{{ smallstep_provisioner_results.stdout }}"
+
+    - name: Set Provisioner name
+      ansible.builtin.set_fact:
+        smallstep_provisioner_name: "{{ smallstep_provisioner_json | json_query(smallstep_jwk_json_query) | first }}"
+
+    - name: Make full Step Install command
+      set_fact:
+        cert_request_command: >-
+          step ca certificate
+          {{ smallstep_certificate_name }}
+          {{ smallstep_certificate_filename }}
+          {{ smallstep_key_filename }}
+          {{ smallstep_step_smallstep_subject_names }}
+          --provisioner-password-file {{ smallstep_provisioner_key }}
+          --provisioner {{ smallstep_provisioner_name }}
+          -f
+
+    - name: Store a copy of the command to request the initial certs
+      ansible.builtin.lineinfile:
+        path: "{{ smallstep_cert_request_script }}"
+        state: present
+        line: "{{ cert_request_command }}"
+        create: true
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: "0700"
+
+    - name: Waiting for User to press Enter
+      ansible.builtin.pause:
+        prompt: 'Waiting for User to press Enter'
+
+    - name: "Request certificate {{ smallstep_certificate_name }}"
+      ansible.builtin.command:
+        cmd: "{{ cert_request_command }}"
+        chdir: "{{ smallstep_root_directory }}"
+
+  when: smallstep_install_leaf_certificates

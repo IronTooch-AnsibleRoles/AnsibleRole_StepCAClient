@@ -1,0 +1,83 @@
+---
+
+#/etc/pve/nodes/artemis/pve-ssl.key
+#/etc/pve/nodes/artemis/pve-ssl.pem
+
+#/etc/pve/nodes/artemis/pveproxy-ssl.pem
+# Remove old certs
+# link new certs
+
+# Trim smallstep_certificate_name to be just hostname. Must match actual node name in Proxmox
+
+- name: Set node name
+  ansible.builtin.set_fact:
+    node_name:  "{{ smallstep_certificate_name  | split('.') | first }}"
+
+- name: Delete files from managed node
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop: 
+  - "/etc/pve/nodes/{{ node_name }}/pve-ssl.key"
+  - "/etc/pve/nodes/{{ node_name }}/pve-ssl.pem"
+
+- name: Ram home the Pem file
+  ansible.builtin.raw: "cp {{ smallstep_certificate_full_path }} /etc/pve/nodes/{{ node_name }}/pve-ssl.pem"
+
+- name: Ram home the Key file
+  ansible.builtin.raw: "cp {{ smallstep_key_full_path }} /etc/pve/nodes/{{ node_name }}/pve-ssl.key"
+
+- name: Add update-certs.sh
+  ansible.builtin.template:
+    src: proxmox_overwritecerts.sh.j2
+    dest: {{ smallstep_root_directory }}/overwrite_certs.sh
+    force: true
+    mode: '0770'  # Ansible-Lint hates when this isn't set
+
+- name: Make override directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/systemd/system/cert-renewer@pveproxy.service.d
+    - /etc/systemd/system/cert-renewer@pvedaemon.service.d
+
+- name: Deploy pveproxy override
+  ansible.builtin.template:
+    src: cert-renewer.pveproxy.override.j2 
+    dest: "/etc/systemd/system/cert-renewer@pveproxy.service.d/override.conf"
+    force: true
+    mode: '0770'  # Ansible-Lint hates when this isn't set
+
+- name: Deploy pvedaemon override
+  ansible.builtin.template:
+    src: cert-renewer.pveproxy.override.j2
+    dest: "/etc/systemd/system/cert-renewer@pvedaemon.service.d/override.conf"
+    force: true
+    mode: '0770'  # Ansible-Lint hates when this isn't set
+
+- name: Ensure cert-renewer@pveproxy.timer is started
+  ansible.builtin.service:
+    name: cert-renewer@pveproxy.timer
+    state: started
+    enabled: true
+
+- name: Ensure pveproxy is restarted
+  ansible.builtin.service:
+    name: pveproxy
+    state: restarted
+    enabled: true
+
+- name: Ensure cert-renewer@pvedaemon.timer is started
+  ansible.builtin.service:
+    name: cert-renewer@pvedaemon.timer
+    state: started
+    enabled: true
+
+- name: Ensure pvedaemon is restarted
+  ansible.builtin.service:
+    name: pvedaemon
+    state: restarted
+    enabled: true
+    

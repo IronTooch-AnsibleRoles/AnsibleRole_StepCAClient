@@ -1,0 +1,63 @@
+---
+
+- name: Check to see if Root CA is installed
+  ansible.builtin.stat:
+    path: "{{ smallstep_root_cert_path }}"
+  register: root_ca_installed
+  tags: install_rootca
+
+- name: Install Root CA, fix Step Path.
+  block:
+    - name: Pull root CA
+      become_user: "{{ smallstep_system_user }}"
+      ansible.builtin.command:
+        cmd: "step ca bootstrap --ca-url {{ smallstep_ca_url }} --fingerprint {{ smallstep_ca_footprint }}"
+        chdir: "{{ smallstep_root_directory }}"
+
+    - name: checking if the user step directory exists
+      stat:
+        path: /home/{{ smallstep_system_user }}/.step/
+      register: user_step_dir_exists
+
+    - name: Moving Step Folders
+      copy:
+        src: "/home/{{ smallstep_system_user }}/.step/"
+        dest: "{{ smallstep_root_directory }}/"
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: '0770'
+        remote_src: true
+      when: user_step_dir_exists.stat.exists
+
+    - name: Delete content & directory
+      file:
+        path: "/home/{{ smallstep_system_user }}/.step/"
+        state: absent
+
+    - name: Fix step path
+      ansible.builtin.replace:
+        path: "{{ smallstep_root_directory }}/config/defaults.json"
+        regexp: "/home/{{ smallstep_system_user }}/.step"
+        replace: "{{ smallstep_root_directory }}"
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: '0770'
+
+    - name: Deploy Provisioner Password
+      ansible.builtin.copy:
+        content: '{{ smallstep_provisioner_password }}'
+        dest: "{{ smallstep_provisioner_key }}"
+        force: true
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: "0700"
+
+    - name: Install root CA
+      ansible.builtin.command:
+        cmd: "step certificate install {{ smallstep_root_cert_path }}"
+        chdir: "{{ smallstep_root_directory }}"
+      environment:
+        STEPPATH: "{{ smallstep_root_directory }}"
+
+  when: ((smallstep_install_root_certificate) and (not root_ca_installed.stat.exists))
+  tags: install_rootca

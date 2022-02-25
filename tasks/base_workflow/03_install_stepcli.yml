@@ -1,0 +1,88 @@
+---
+
+- name: Get the latest tag from Github for Smallstep CA Step utility
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/smallstep/cli/releases/latest
+  register: latest_release
+  tags: install_smallstep
+
+- name: Get version from file
+  ansible.builtin.shell:
+    cmd: "test -f \"{{ smallstep_installed_version_path }}\" && cat {{ smallstep_installed_version_path }}"
+  register: installed_version
+  failed_when: false
+  changed_when: false
+  tags: install_smallstep
+
+- name: Install Step cli
+  block:
+
+    - name: Set variable for latest release tag without 'v'
+      set_fact:
+        latest_release_semver: "{{ latest_release.json.tag_name | replace('v','') }}"
+
+    - name: Download latest release for Step utility
+      ansible.builtin.get_url:
+        url: "https://github.com/smallstep/cli/releases/download/{{ latest_release.json.tag_name }}/step-cli_{{ latest_release_semver }}_amd64.deb"
+        dest: "/tmp/smallstep_step.deb"
+        force: true
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: "0770"
+        validate_certs: true
+
+    - name: Install Step application from debfile
+      ansible.builtin.apt:
+        deb: "/tmp/smallstep_step.deb"
+      register: deb_status
+      until: deb_status is success
+      delay: 6
+      retries: 10
+
+    - name: Add STEPPATH to /etc/profiles.d/
+      ansible.builtin.copy:
+        content: 'export STEPPATH={{ smallstep_root_directory }}'
+        dest: /etc/profile.d/steppath.sh
+        force: true
+        owner: "root"
+        group: "root"
+        mode: "0644"
+
+    - name: Add STEPPATH to /home/{{ smallstep_system_user }}/.bashrc
+      ansible.builtin.lineinfile:
+        path: /home/{{ smallstep_system_user }}/.bashrc
+        state: present
+        line: 'export STEPPATH={{ smallstep_root_directory }}'
+
+    - name: Add STEPPATH to /root/.bashrc
+      ansible.builtin.lineinfile:
+        path: /root/.bashrc
+        state: present
+        line: 'export STEPPATH={{ smallstep_root_directory }}'
+
+    - name: Add STEPPATH to /etc/environment
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        state: present
+        line: 'STEPPATH={{ smallstep_root_directory }}'
+
+    - name: Make Step CA directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0700'
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+      loop:
+        - {{ smallstep_root_directory }}
+
+    - name: Make current version file (to save re-installs / support idempotence)
+      copy:
+        content: "{{ latest_release.json.tag_name }}"
+        dest: "{{ smallstep_installed_version_path }}"
+        owner: "{{ smallstep_system_user }}"
+        group: "{{ smallstep_system_user }}"
+        mode: '0770'
+
+  when: (installed_version.stdout != latest_release.json.tag_name)
+  tags: install_smallstep

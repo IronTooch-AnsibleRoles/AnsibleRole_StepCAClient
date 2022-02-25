@@ -1,0 +1,15 @@
+---
+- name: Make group for smallstep_user
+  ansible.builtin.group:
+    name: "{{ smallstep_system_user }}"
+    state: present
+    system: true
+
+- name: Make service user for smallstep_user
+  ansible.builtin.user:
+    name: "{{ smallstep_system_user }}"
+    state: present
+    create_home: true
+    groups: "{{ smallstep_system_user }}"
+    system: true
+    shell: /bin/bash

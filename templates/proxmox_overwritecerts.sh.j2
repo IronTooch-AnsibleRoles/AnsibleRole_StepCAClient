@@ -1,0 +1,3 @@
+#!/bin/bash
+cp {{ smallstep_certificate_full_path }} /etc/pve/nodes/{{ node_name }}/pve-ssl.pem
+cp {{ smallstep_key_full_path }} /etc/pve/nodes/{{ node_name }}/pve-ssl.key

@@ -1,0 +1,39 @@
+---
+- name: Install Renewal Services
+  block:
+
+  - name: Template out move certs script
+    ansible.builtin.template:
+      src: ./basic_templates/master_renewal.sh.j2
+      dest: "{{ smallstep_cert_management_script }}"
+      force: true
+      mode: '0700'
+
+  - name: Template out move certs script
+    ansible.builtin.template:
+      src: ./basic_templates/postrenewal_movecerts.sh.j2
+      dest: "{{ smallstep_cert_mgmt_dir }}/{{ smallstep_certificate_name }}_postrenewal_movecerts.sh"
+      force: true
+      mode: '0700'
+
+  - name: Template out restart services script
+    ansible.builtin.template:
+      src: ./basic_templates/postrenewal_restartdeps.sh.j2
+      dest: "{{ smallstep_cert_mgmt_dir }}/{{ smallstep_certificate_name }}_postrenewal_restartdeps.sh"
+      force: true
+      mode: '0700'
+
+  when: smallstep_install_renewal_procedure
+
+- name: Turn on Cron job
+  block:
+
+    - name: Add Master Renewer to Cron
+      ansible.builtin.cron:
+        name: "Renew all scripts and run post-renewal"
+        state: present
+        special_time: "hourly"
+        user: "root"
+        job: "/bin/bash {{ smaallstep_cert_management_script }}"
+
+  when: smallstep_turn_on_renewal

@@ -1,0 +1,13 @@
+---
+# TODO: Known Service for Nginx
+# TODO: Known Service for Proxmox
+
+# - name: Install certificates into Nginx and start renewal configuration
+#   ansible.builtin.include_tasks:
+#     file: "./known_services/nginx_certs.yml"
+#   when: smallstep_dependent_service == "nginx"
+
+# - name: Install certificates into Proxmox and start renewal configuration
+#   ansible.builtin.include_tasks:
+#     file: "./known_services/proxmox_certs.yml"
+#   when: smallstep_dependent_service == "proxmox"

@@ -1,21 +1,29 @@
 ---
-# tasks file for zz_app
+# tasks file for pk_stepcli
 - name: Install dependencies
   ansible.builtin.include_tasks:
-    file: "01_install_dependencies.yml"
+    file: "./base_workflow/01_install_dependencies.yml"
 
 - name: Add Service User
   ansible.builtin.include_tasks:
-    file: "02_create_serviceuser.yml"
+    file: "./base_workflow/02_create_serviceuser.yml"
 
-- name: Download and Install my_app
+- name: Install Step CLI
   ansible.builtin.include_tasks:
-    file: "03_install_app.yml"
+    file: "./base_workflow/03_install_stepcli.yml"
 
-- name: Configure Environment
+- name: Install Root Certificate
   ansible.builtin.include_tasks:
-    file: "04_configure_app.yml"
+    file: "./base_workflow/04_install_rootca.yml"
 
-- name: Deploy Services and Handle SSL
+- name: Get Leaf Certificate
   ansible.builtin.include_tasks:
-    file: "05_deploy_services.yml"
+    file: "./base_workflow/05_make_initialcertificates.yml"
+
+- name: Install Automatic Renewal
+  ansible.builtin.include_tasks:
+    file: "./base_workflow/06_install_renewalservices.yml"
+
+- name: Configure known services
+  ansible.builtin.include_tasks:
+    file: "./base_workflow/07_install_renewalservices.yml"

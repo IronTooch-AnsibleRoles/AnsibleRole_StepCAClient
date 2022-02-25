@@ -1,0 +1,24 @@
+---
+- name: Deploy Nginx ssl-keys.conf
+  ansible.builtin.template:
+    src: ssl-keys.conf.j2
+    dest: /etc/nginx/ssl-keys.conf
+    force: true
+    mode: '0700'
+
+- name: Deploy Nginx ssl-certs.conf
+  ansible.builtin.template:
+    src: ssl-params.conf.j2
+    dest: /etc/nginx/ssl-params.conf
+    force: true
+    mode: '0700'
+
+- name: Ensure nginx is restarted
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+    enabled: true
+
+
+# make SSL params 
+# turn on service for nginx

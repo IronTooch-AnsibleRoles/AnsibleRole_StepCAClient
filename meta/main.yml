@@ -1,10 +1,11 @@
 galaxy_info:
-  role_name: my_role
+  role_name: smallstep_leafclient
   namespace: irontooch
   author: IronTooch
-  description: App_Description
   license: GPL-3.0-only
   min_ansible_version: 2.1
+  description: Deploys the certificates from an internal authoratative Smallstep CA
+  company: IronTooch
 
   platforms:
     - name: Ubuntu
@@ -13,8 +14,4 @@ galaxy_info:
 
   galaxy_tags: []
 
-dependencies: []  # Remove [] if roles are included, below
-#   - role: 'my_namespace.my_role'
-#     vars:
-#       my_var: "my_value"
-
+dependencies: []

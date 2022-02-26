@@ -40,6 +40,7 @@ smallstep_key_filename: "{{ smallstep_certificate_name }}.key"
 smallstep_key_full_path: "{{ smallstep_root_directory }}/{{ smallstep_key_filename }}"
 smallstep_installed_version_path: "{{ smallstep_root_directory }}/version.txt"
 smallstep_provisioner_key: "{{ smallstep_root_directory }}/step_creds.txt"
+smallstep_rootca_path: "/etc/step-ca/certs/root_ca.crt"
 
 smallstep_step_subject_names: "--san {{ smallstep_subject_names | join (\" --san \") }}"
 smallstep_jwk_json_query: "[?type=='JWK'].name"

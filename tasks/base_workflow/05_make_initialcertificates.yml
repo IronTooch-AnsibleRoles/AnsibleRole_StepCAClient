@@ -32,6 +32,7 @@
           {{ smallstep_key_filename }}
           {{ smallstep_step_subject_names }}
           --ca-url {{ smallstep_ca_url }}
+          -root {{ smallstep_rootca_path }}
           --provisioner-password-file {{ smallstep_provisioner_key }}
           --provisioner {{ smallstep_provisioner_name }}
           -f

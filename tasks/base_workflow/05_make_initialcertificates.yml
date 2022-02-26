@@ -51,5 +51,7 @@
       ansible.builtin.command:
         cmd: "{{ cert_request_command }}"
         chdir: "{{ smallstep_root_directory }}"
+      environment:
+        STEPPATH: "{{ smallstep_root_directory }}"
 
   when: smallstep_request_leaf_certificates

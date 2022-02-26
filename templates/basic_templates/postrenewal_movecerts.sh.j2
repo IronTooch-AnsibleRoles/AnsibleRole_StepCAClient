@@ -1,11 +1,32 @@
 #!/bin/bash
-# logger "step-ca-leaf - Moving certs to appropriate location and changing ownership..."
-# 
-# cp {{ my_app_inital_cert_location }}/{{ external_domain }}.crt {{ my_app_certificate_path }}
-# cp {{ my_app_inital_cert_location }}/{{ external_domain }}.key {{ my_app_key_path }}
-# chmod 0640 {{ my_app_certificate_path }}
-# chmod 0640 {{ my_app_key_path }}
-# chown {{ my_app_service_user }}:{{ my_app_service_user }} {{ my_app_certificate_path }}
-# chown {{ my_app_service_user }}:{{ my_app_service_user }} {{ my_app_key_path }}
-# 
-# logger "step-ca-leaf - Moving certs complete"
+CERT_NAME=$1
+logger "step-ca-leaf - $CERT_NAME - Moving Certs - Moving certs to appropriate location and changing ownership..."
+echo "step-ca-leaf - $CERT_NAME - Moving Certs - Moving certs to appropriate location and changing ownership..."
+
+{% if smallstep_postrenewal_cert_path is defined and 
+      smallstep_postrenewal_cert_path|length %}
+cp {{ smallstep_certificate_full_path}} {{ smallstep_postrenewal_cert_path }}
+chmod 0640 {{ smallstep_postrenewal_cert_path }}
+{% endif %}
+{% if smallstep_postrenewal_key_path is defined and 
+      smallstep_postrenewal_key_path|length %}
+cp {{ smallstep_key_full_path}} {{ smallstep_postrenewal_key_path}}
+chmod 0640 {{ smallstep_postrenewal_key_path }}
+{% endif %}
+{% if smallstep_postrenewal_cert_path is defined and 
+      smallstep_postrenewal_cert_path|length and 
+      smallstep_postrenewal_cert_owner is defined and
+      smallstep_postrenewal_cert_owner|length
+      %}
+chown {{ smallstep_postrenewal_cert_owner }}:{{ smallstep_postrenewal_cert_owner }} {{ smallstep_postrenewal_cert_path }}
+{% endif %}
+{% if smallstep_postrenewal_key_path is defined and 
+      smallstep_postrenewal_key_path|length and 
+      smallstep_postrenewal_key_owner is defined and
+      smallstep_postrenewal_key_owner|length
+      %}
+chown {{ smallstep_postrenewal_key_owner }}:{{ smallstep_postrenewal_key_owner }} {{ smallstep_postrenewal_key_path }}
+{% endif %}
+
+echo "step-ca-leaf - $CERT_NAME - Moving Certs - Moving certs complete"
+logger "step-ca-leaf - $CERT_NAME - Moving Certs - Moving certs complete"

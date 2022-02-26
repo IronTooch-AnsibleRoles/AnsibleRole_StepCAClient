@@ -23,6 +23,56 @@
       force: true
       mode: '0700'
 
+  - name: Check if there are services to restart
+    ansible.builtin.set_fact:
+      smallstep_services_to_restart_present: "{{ smallstep_services_to_restart | length > 0 }}"
+
+  - name: Add services to Restart Dependencies script when there are services to install
+    block:
+
+      - name: Set services to restart
+        ansible.builtin.set_fact:
+          smallstep_service_to_restart_str: |-
+            {{ smallstep_service_to_restart_str }}
+            systemctl restart {{ item }}
+        loop: "{{ smallstep_services_to_restart | default('[]', true)}}"
+
+      - name: Add space for readability
+        ansible.builtin.set_fact:
+          smallstep_service_to_restart_str: |
+            {{ smallstep_service_to_restart_str }}
+
+      - name: Print services to restart block
+        ansible.builtin.debug:
+          msg: "{{ smallstep_service_to_restart_str }}"
+
+      - name: Add services to Restart Dependencies script
+        ansible.builtin.blockinfile:
+          path: "{{ smallstep_cert_mgmt_dir }}/{{ smallstep_certificate_name }}_postrenewal_restartdeps.sh"
+          state: present
+          block: |+
+            {{ smallstep_service_to_restart_str }}
+
+          create: true
+          mode: "0700"
+
+    when: smallstep_services_to_restart_present
+
+  - name: Remove services from  Restart Dependencies script when there are none
+    block:
+
+      - name: Remove services from Restart Dependencies script
+        ansible.builtin.blockinfile:
+          path: "{{ smallstep_cert_mgmt_dir }}/{{ smallstep_certificate_name }}_postrenewal_restartdeps.sh"
+          state: present
+          block: |
+            echo "No services to restart"
+            logger "step-ca-leaf - $CERT_NAME - Restarting Dependencies - No dependencies to restart"
+          create: true
+          mode: "0700"
+
+    when: not smallstep_services_to_restart_present
+
   when: smallstep_install_renewal_procedure
 
 - name: Turn on Cron job
@@ -32,8 +82,9 @@
       ansible.builtin.cron:
         name: "Renew all scripts and run post-renewal"
         state: present
-        special_time: "hourly"
+        # special_time: "hourly"
+        minute: "*/10"
         user: "root"
-        job: "/bin/bash {{ smaallstep_cert_management_script }}"
+        job: "/bin/bash {{ smallstep_cert_management_script }}"
 
   when: smallstep_turn_on_renewal

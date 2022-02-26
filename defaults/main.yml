@@ -9,13 +9,14 @@ smallstep_provisioner_password: aaaaaaa
 
 ## Can be tuned
 smallstep_subject_names:
-  - "{{ ansible_hostname }}.{{ top_level_domain }}"
-  - "{{ ansible_hostname }}.prod.{{ top_level_domain }}"
+  - "{{ ansible_hostname }}.{{ smallstep_top_level_domain }}"
+  - "{{ ansible_hostname }}.prod.{{ smallstep_top_level_domain }}"
   - "{{ ansible_default_ipv4.address }}"
 smallstep_certificate_name: "{{ smallstep_subject_names[0] }}"
 smallstep_certificate_filename: "{{ smallstep_certificate_name }}.crt"
 smallstep_dependent_service: ""  # Options nginx/proxmox
 
+# Where to put certificates other than the default location
 smallstep_postrenewal_cert_path: ""
 smallstep_postrenewal_cert_owner: ""
 smallstep_postrenewal_key_path: ""
@@ -26,6 +27,7 @@ smallstep_install_root_certificate: true
 smallstep_request_leaf_certificates: true
 smallstep_install_renewal_procedure: true
 smallstep_turn_on_renewal: true
+smallstep_services_to_restart: ""
 
 # Defaults (No need to change normally)
 
@@ -39,10 +41,11 @@ smallstep_key_full_path: "{{ smallstep_root_directory }}/{{ smallstep_key_filena
 smallstep_installed_version_path: "{{ smallstep_root_directory }}/version.txt"
 smallstep_provisioner_key: "{{ smallstep_root_directory }}/step_creds.txt"
 
-smallstep_step_smallstep_subject_names: "--san {{ smallstep_subject_names | join (\" --san \") }}"
+smallstep_step_subject_names: "--san {{ smallstep_subject_names | join (\" --san \") }}"
 smallstep_jwk_json_query: "[?type=='JWK'].name"
 
 ## Certificate management
 smallstep_cert_mgmt_dir: "{{ smallstep_root_directory }}/cert_management"
 smallstep_cert_request_script: "{{ smallstep_cert_mgmt_dir }}/cert_request.sh"
 smallstep_cert_management_script: "{{ smallstep_cert_mgmt_dir }}/cert_master_management.sh"
+smallstep_service_to_restart_str: ""

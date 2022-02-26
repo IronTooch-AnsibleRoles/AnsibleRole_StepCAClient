@@ -1,6 +1,8 @@
 #!/bin/bash
 
-#logger "step-ca-leaf - Master Cert Mgmt - Beginning master cert management..."
+logger "step-ca-leaf - Master Cert Mgmt - Beginning master cert management..."
+echo "step-ca-leaf - Master Cert Mgmt - Beginning master cert management..."
+
 CERT_PATH="{{ smallstep_root_directory }}"
 CERT_OPS_LOG="$CERT_PATH/renewal_logs.txt"
 CERT_FOLDER="$CERT_PATH/*.crt"
@@ -9,36 +11,62 @@ CERT_SCRIPTS_FOLDER="{{ smallstep_cert_mgmt_dir }}"
 for cert_name in $CERT_FOLDER
 do
         CERT_BASE_NAME=$(basename -- "$cert_name" .crt)
-        
-        #logger "step-ca-leaf - Master Cert Mgmt - Managing $CERT_BASE_NAME..."
+
+        logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Beginning Management..."
+        echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Beginning Management..."
 
         CURRENT_DTG=$(date +"%Y-%m-%d - %T")
 
         #printf -v date '%(%Y-%m-%d)T\n' -1 
         CERT_VALID_FROM=$(step certificate inspect $CERT_PATH/$CERT_BASE_NAME.crt --short | tail -n 2 | head -n 1 | cut -c 16- | sed 's/T/ - /g')
-        CERT_VALID_TO=$(step certificate inspect $CERT_PATH/$CERT_BASE_NAME.crt --short | tail -n 1 | | cut -c 16- | sed 's/T/ - /g')
+        CERT_VALID_TO=$(step certificate inspect $CERT_PATH/$CERT_BASE_NAME.crt --short | tail -n 1 | cut -c 16- | sed 's/T/ - /g')
 
 
-        echo "Current time is: $CURRENT_DTG. Cert is valid from: $CERT_VALID_FROM to $CERT_VALID_TO"
-        # Check for expiration
         # Print current time, validity timelin
+        echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Current time is: $CURRENT_DTG. Cert is valid from: $CERT_VALID_FROM to $CERT_VALID_TO"
+        logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Current time is: $CURRENT_DTG. Cert is valid from: $CERT_VALID_FROM to $CERT_VALID_TO"
 
-        # If cert needs renewal
-            # Renew
+        # Check for expiration
+        CERT_VALID=1
+        CERT_DUE_FOR_RENEWAL=0
+
+        step certificate needs-renewal  $CERT_PATH/$CERT_BASE_NAME.crt >/dev/null 2>&1
+        # step certificate needs-renewal  $CERT_PATH/$CERT_BASE_NAME.crt --expires-in 25h >/dev/null 2>&1
+        RENEWAL_STATUS=$?
 
 
+        if [ $RENEWAL_STATUS == $CERT_VALID ]; then
+            echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Certificate is not due for renewal yet"
+            logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Certificate is not due for renewal yet"
+
+        elif [ $RENEWAL_STATUS == $CERT_DUE_FOR_RENEWAL ]; then
+            echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Certificate is due for renewal"
+            logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Certificate is due for renewal"
+
+            echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Renewing certificate..."
+            logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Renewing certificate..."
+
+            step ca renew --force $CERT_PATH/$CERT_BASE_NAME.crt $CERT_PATH/$CERT_BASE_NAME.key
+            echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Renewing certificate complete"
+            logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Renewing certificate complete"
+
+            MOVE_CERT_SCRIPT=$(echo $CERT_BASE_NAME"_postrenewal_movecerts.sh $CERT_BASE_NAME")
             # Move certs to wherever they need to go
-            /bin/bash $CERT_SCRIPTS_FOLDER/($CERT_BASE_NAME)_postrenewal_movecerts.sh
+            /bin/bash $CERT_SCRIPTS_FOLDER/$MOVE_CERT_SCRIPT
 
+            RESTART_DEPS_SCRIPT=$(echo $CERT_BASE_NAME"_postrenewal_restartdeps.sh $CERT_BASE_NAME")
             # Restart any necessary services
-            /bin/bash $CERT_SCRIPTS_FOLDER/($CERT_BASE_NAME)_postrenewal_restartdeps.sh
-        
-        # Else
+            /bin/bash $CERT_SCRIPTS_FOLDER/$RESTART_DEPS_SCRIPT
+        else
+            echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Other big problem. Notifiy Admin"
+            logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Other big problem. Notifiy Admin"
 
-            # Print no renewal needed yet
+        fi
 
-        #logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME complete"
+        echo "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME - Complete"
+        logger "step-ca-leaf - Master Cert Mgmt - $CERT_BASE_NAME complete"
 
 done
 
-#logger "step-ca-leaf - Master Cert Mgmt - All Certs Complete"
+echo "step-ca-leaf - Master Cert Mgmt - All Certs Complete"
+logger "step-ca-leaf - Master Cert Mgmt - All Certs Complete"

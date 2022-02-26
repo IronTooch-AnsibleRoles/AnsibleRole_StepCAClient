@@ -1,5 +1,4 @@
 ---
-
 - name: Get the latest tag from Github for Smallstep CA Step utility
   ansible.builtin.uri:
     url: https://api.github.com/repos/smallstep/cli/releases/latest
@@ -74,7 +73,7 @@
         owner: "{{ smallstep_system_user }}"
         group: "{{ smallstep_system_user }}"
       loop:
-        - {{ smallstep_root_directory }}
+        - "{{ smallstep_root_directory }}"
 
     - name: Make current version file (to save re-installs / support idempotence)
       copy:

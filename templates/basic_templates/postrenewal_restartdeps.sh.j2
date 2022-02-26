@@ -1,8 +1,11 @@
 #!/bin/bash
-# logger "step-ca-leaf - Managing / Restarting Dependent Services..."
-# 
-# # START_HERE
-# 
-# #END_HERE
-# 
-# logger "step-ca-leaf - Managing / Restarting Dependent Services Complete"
+CERT_NAME=$1
+logger "step-ca-leaf - $CERT_NAME - Restarting Dependencies - Managing / Restarting Dependent Services..."
+echo "step-ca-leaf - $CERT_NAME - Restarting Dependencies - Managing / Restarting Dependent Services..."
+
+# BEGIN ANSIBLE MANAGED BLOCK
+
+# END ANSIBLE MANAGED BLOCK
+
+echo "step-ca-leaf - $CERT_NAME - Restarting Dependencies - Managing / Restarting Dependent Services Complete"
+logger "step-ca-leaf - $CERT_NAME - Restarting Dependencies - Managing / Restarting Dependent Services Complete"

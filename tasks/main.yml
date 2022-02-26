@@ -1,29 +1,29 @@
 ---
 # tasks file for pk_stepcli
-- name: Install dependencies
+- name: Stage 1 - Install dependencies
   ansible.builtin.include_tasks:
     file: "./base_workflow/01_install_dependencies.yml"
 
-- name: Add Service User
+- name: Stage 2 - Add Service User
   ansible.builtin.include_tasks:
     file: "./base_workflow/02_create_serviceuser.yml"
 
-- name: Install Step CLI
+- name: Stage 3 - Install Step CLI
   ansible.builtin.include_tasks:
     file: "./base_workflow/03_install_stepcli.yml"
 
-- name: Install Root Certificate
+- name: Stage 4 - Install Root Certificate
   ansible.builtin.include_tasks:
     file: "./base_workflow/04_install_rootca.yml"
 
-- name: Get Leaf Certificate
+- name: Stage 5 - Get Leaf Certificate
   ansible.builtin.include_tasks:
     file: "./base_workflow/05_make_initialcertificates.yml"
 
-- name: Install Automatic Renewal
+- name: Stage 6 - Install Automatic Renewal
   ansible.builtin.include_tasks:
     file: "./base_workflow/06_install_renewalservices.yml"
 
-- name: Configure known services
+- name: Stage 7 - Configure known services
   ansible.builtin.include_tasks:
-    file: "./base_workflow/07_install_renewalservices.yml"
+    file: "./base_workflow/07_install_known_services.yml"

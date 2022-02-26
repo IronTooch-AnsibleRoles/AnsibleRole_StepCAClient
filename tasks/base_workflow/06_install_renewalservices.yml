@@ -56,6 +56,10 @@
           create: true
           mode: "0700"
 
+      - name: Run master renewer service the first time
+        ansible.builtin.command:
+          cmd: "{{ smallstep_cert_mgmt_dir }}/{{ smallstep_certificate_name }}_postrenewal_movecerts.sh"
+
     when: smallstep_services_to_restart_present
 
   - name: Remove services from  Restart Dependencies script when there are none
@@ -82,8 +86,7 @@
       ansible.builtin.cron:
         name: "Renew all scripts and run post-renewal"
         state: present
-        # special_time: "hourly"
-        minute: "*/10"
+        special_time: "hourly"
         user: "root"
         job: "/bin/bash {{ smallstep_cert_management_script }}"
 

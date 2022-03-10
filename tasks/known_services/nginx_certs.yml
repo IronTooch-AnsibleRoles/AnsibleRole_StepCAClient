@@ -1,14 +1,14 @@
 ---
 - name: Deploy Nginx ssl-keys.conf
   ansible.builtin.template:
-    src: ssl-keys.conf.j2
+    src: ./nginx/ssl-keys.conf.j2
     dest: /etc/nginx/ssl-keys.conf
     force: true
     mode: '0700'
 
 - name: Deploy Nginx ssl-certs.conf
   ansible.builtin.template:
-    src: ssl-params.conf.j2
+    src: ./nginx/ssl-params.conf.j2
     dest: /etc/nginx/ssl-params.conf
     force: true
     mode: '0700'

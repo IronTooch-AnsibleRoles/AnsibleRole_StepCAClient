@@ -1,6 +1,15 @@
 ---
 # TODO: Known Service for Proxmox
 
+
+- name: Print the value of the variable smallstep_dependent_service
+  ansible.builtin.debug:
+    msg: "smallstep_dependent_service: {{ smallstep_dependent_service }}"
+
+- name: Print the value of the variable smallstep_dependent_service
+  ansible.builtin.debug:
+    msg: "smallstep_dependent_service is Nginx: {{ smallstep_dependent_service == 'nginx' }}"
+
 - name: Install certificates into Nginx and start renewal configuration
   ansible.builtin.include_tasks:
     file: "./known_services/nginx_certs.yml"

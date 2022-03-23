@@ -2,6 +2,16 @@
 - name: Install Renewal Services
   block:
 
+  - name: Check if there are services to restart
+    ansible.builtin.set_fact:
+      smallstep_services_to_restart_present: "{{ smallstep_services_to_restart | length > 0 }}"
+
+  - name: Add Nginx to services to restart if dependent and not present
+    set_fact:
+      smallstep_services_to_restart:
+        - nginx
+    when: ((not smallstep_services_to_restart_present) and (smallstep_dependent_service == "nginx"))
+
   - name: Template out move certs script
     ansible.builtin.template:
       src: ./basic_templates/master_renewal.sh.j2
@@ -23,9 +33,11 @@
       force: true
       mode: '0700'
 
-  - name: Check if there are services to restart
+  - name: Check again if there are services to restart
     ansible.builtin.set_fact:
       smallstep_services_to_restart_present: "{{ smallstep_services_to_restart | length > 0 }}"
+
+
 
   - name: Add services to Restart Dependencies script when there are services to install
     block:
@@ -64,6 +76,8 @@
 
   - name: Remove services from  Restart Dependencies script when there are none
     block:
+
+
 
       - name: Remove services from Restart Dependencies script
         ansible.builtin.blockinfile:

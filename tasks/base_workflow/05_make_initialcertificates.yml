@@ -35,6 +35,7 @@
           -root {{ smallstep_rootca_path }}
           --provisioner-password-file {{ smallstep_provisioner_key }}
           --provisioner {{ smallstep_provisioner_name }}
+          --kty RSA
           -f
 
     - name: Store a copy of the command to request the initial certs
